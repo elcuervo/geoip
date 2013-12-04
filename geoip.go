@@ -44,16 +44,40 @@ func NewLocator(user, key string) *GeoIP {
 	return &GeoIP{user, key}
 }
 
+func (g *GeoIP) check() {
+        if g.User == "" || g.Key == "" {
+                panic("You need a user and a key to use the service")
+        }
+}
+
 func (g *GeoIP) FindCity(ip string) Geolocation {
 	var geolocation Geolocation
 
+        g.check()
+
 	client := &http.Client{}
 	locator := geoip_url + "city/" + ip
-	req, _ := http.NewRequest("GET", locator, nil)
+	req, err := http.NewRequest("GET", locator, nil)
+        if err != nil {
+                panic(err)
+        }
+
 	req.SetBasicAuth(g.User, g.Key)
-	res, _ := client.Do(req)
-	body, _ := ioutil.ReadAll(res.Body)
-	json.Unmarshal(body, &geolocation)
+	res, err := client.Do(req)
+        if err != nil {
+                panic(err)
+        }
+
+        defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+        if err != nil {
+                panic(err)
+        }
+
+	err = json.Unmarshal(body, &geolocation)
+        if err != nil {
+                panic(err)
+        }
 
 	return geolocation
 }
