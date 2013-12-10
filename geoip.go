@@ -3,6 +3,7 @@ package geoip
 import (
 	"encoding/json"
 	"io/ioutil"
+        "log"
 	"net/http"
 )
 
@@ -11,6 +12,7 @@ const geoip_url = "https://geoip.maxmind.com/geoip/v2.0/"
 type GeoIP struct {
 	User string
 	Key  string
+        Verbose bool
 }
 
 type Location struct {
@@ -41,7 +43,7 @@ type Geolocation struct {
 }
 
 func NewLocator(user, key string) *GeoIP {
-	return &GeoIP{user, key}
+	return &GeoIP{user, key, false}
 }
 
 func (g *GeoIP) check() {
@@ -57,6 +59,9 @@ func (g *GeoIP) FindCity(ip string) Geolocation {
 
 	client := &http.Client{}
 	locator := geoip_url + "city/" + ip
+        if g.Verbose {
+                log.Println(locator)
+        }
 	req, err := http.NewRequest("GET", locator, nil)
         if err != nil {
                 panic(err)
@@ -70,6 +75,9 @@ func (g *GeoIP) FindCity(ip string) Geolocation {
 
         defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
+        if g.Verbose {
+                log.Println(string(body))
+        }
         if err != nil {
                 panic(err)
         }
